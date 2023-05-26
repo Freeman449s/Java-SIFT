@@ -1,4 +1,8 @@
 .idea
+image
 
 # 依赖项
 lib
+
+# 输出
+out
