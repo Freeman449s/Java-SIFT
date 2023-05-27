@@ -1,3 +1,5 @@
+package main;
+
 import org.opencv.core.*;
 
 import java.util.*;
@@ -12,7 +14,7 @@ public class ExtremaDetector {
     static ArrayList<Point> run(Mat grayFloat) {
         Mat baseImage = prepareBaseImage(grayFloat);
         ArrayList<Octave> octaves = generateOctaves(baseImage);
-
+        return null; // FIXME
     }
 
     /**
@@ -51,7 +53,11 @@ public class ExtremaDetector {
                         // TODO
                     }
                 }
+                Util.foreachPixelDo(curr.width(), curr.height(), 1, 1, (x, y) -> {
+                    System.out.printf(String.valueOf(curr.get(x, y)[0]));
+                });
             }
         }
+        return null; // FIXME
     }
 }
