@@ -1,5 +1,6 @@
 package main;
 
+import org.opencv.core.Mat;
 import org.opencv.core.Size;
 
 import java.util.ArrayList;
@@ -11,6 +12,38 @@ import java.util.concurrent.TimeoutException;
 public class Util {
     public static double min(Size size) {
         return Math.min(size.height, size.width);
+    }
+
+    /**
+     * 取2D矩阵中的最小值
+     *
+     * @param mat2D 2D矩阵
+     * @return mat2D中的最小值
+     */
+    public static double min(Mat mat2D) {
+        double min = Double.MAX_VALUE;
+        for (int x = 0; x < mat2D.width(); x++) {
+            for (int y = 0; y < mat2D.height(); y++) {
+                if (mat2D.get(y, x)[0] < min) min = mat2D.get(y, x)[0];
+            }
+        }
+        return min;
+    }
+
+    /**
+     * 取2D矩阵中的最大值
+     *
+     * @param mat2D 2D矩阵
+     * @return mat2D中的最大值
+     */
+    public static double max(Mat mat2D) {
+        double max = Double.MIN_VALUE;
+        for (int x = 0; x < mat2D.width(); x++) {
+            for (int y = 0; y < mat2D.height(); y++) {
+                if (mat2D.get(y, x)[0] > max) max = mat2D.get(y, x)[0];
+            }
+        }
+        return max;
     }
 
     public static void foreachPixelDo(int width, int height, int borderX, int borderY, PixelOperation operation) {
@@ -58,7 +91,7 @@ public class Util {
         for (int i = 1; i <= nSideBlock; i++) {
             for (int j = 1; j <= nSideBlock; j++) {
                 int xStart = xBoundaries.get(i - 1), xEnd = xBoundaries.get(i);
-                int yStart = yBoundaries.get(i - 1), yEnd = yBoundaries.get(i);
+                int yStart = yBoundaries.get(j - 1), yEnd = yBoundaries.get(j);
                 executorService.execute(() -> {
                     for (int x = xStart; x < xEnd; x++) {
                         for (int y = yStart; y < yEnd; y++) {
