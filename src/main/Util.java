@@ -1,8 +1,10 @@
 package main;
 
+import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 
+import java.security.Key;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -117,6 +119,11 @@ public class Util {
      */
     public static void foreachPixelParallelDo(int width, int height, PixelOperation operation) throws InterruptedException, TimeoutException {
         foreachPixelParallelDo(width, height, 0, 0, operation);
+    }
+
+    public static KeyPoint keyPointDeepCopy(KeyPoint keyPoint) {
+        return new KeyPoint((float) keyPoint.pt.x, (float) keyPoint.pt.y, keyPoint.size, keyPoint.angle,
+                keyPoint.response, keyPoint.octave, keyPoint.class_id);
     }
 }
 
