@@ -9,6 +9,7 @@ import static org.opencv.imgcodecs.Imgcodecs.*;
 import main.*;
 
 import java.math.*;
+import java.security.Key;
 import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
 
@@ -19,11 +20,11 @@ public class Test {
     }
 
     public static void main(String[] args) {
-        Mat gray = imread("image/beach.jpg", IMREAD_GRAYSCALE);
+        Mat gray = imread("image/box.png", IMREAD_GRAYSCALE);
         //System.out.printf("Min value = %.3f, max value = %.3f\n", Util.min(gray), Util.max(gray));
         normalize(gray, gray, 0, 1, NORM_MINMAX, CV_32F);
         try {
-            detectorTest(gray);
+            locatorTest(gray);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -76,6 +77,16 @@ public class Test {
     private static void detectorTest(Mat gray) throws InterruptedException, TimeoutException {
         ExtremaDetector extremaDetector = new ExtremaDetector();
         ArrayList<KeyPoint> keyPoints = extremaDetector.run(gray);
+        System.out.println();
+    }
+
+    private static void locatorTest(Mat gray) throws InterruptedException, TimeoutException {
+        ExtremaDetector extremaDetector = new ExtremaDetector();
+        ArrayList<KeyPoint> coarseKeyPoints = extremaDetector.run(gray);
+        ArrayList<Octave> octaves = extremaDetector.octaves;
+
+        KeyPointLocator locator = new KeyPointLocator();
+        ArrayList<KeyPoint> keyPoints = locator.run(coarseKeyPoints, octaves);
         System.out.println();
     }
 }

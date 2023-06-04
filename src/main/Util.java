@@ -68,6 +68,8 @@ public class Util {
      * @param borderX   横轴上留出的边缘，函数不会对边缘像素进行操作
      * @param borderY   纵轴上留出的边缘，函数不会对边缘像素进行操作
      * @param operation 需要在每个像素上进行的操作
+     * @throws InterruptedException 如果线程池在等待线程运行完毕时被中断，将抛出此异常
+     * @throws TimeoutException     如果线程池未能在规定时间（1小时）内完成任务，将抛出此异常
      */
     public static void foreachPixelParallelDo(int width, int height, int borderX, int borderY, PixelOperation operation) throws InterruptedException, TimeoutException {
         int nCore = Runtime.getRuntime().availableProcessors();
@@ -124,6 +126,28 @@ public class Util {
     public static KeyPoint keyPointDeepCopy(KeyPoint keyPoint) {
         return new KeyPoint((float) keyPoint.pt.x, (float) keyPoint.pt.y, keyPoint.size, keyPoint.angle,
                 keyPoint.response, keyPoint.octave, keyPoint.class_id);
+    }
+
+    /**
+     * 局部尺度向全局尺度的转换。globalScale = localScale * 2^(octaveNo).
+     *
+     * @param localScale 局部尺度
+     * @param octaveNo   octave序号，从0开始
+     * @return 全局尺度
+     */
+    public static float local2GlobalScale(float localScale, int octaveNo) {
+        return localScale * (float) Math.pow(2, octaveNo);
+    }
+
+    /**
+     * 全局尺度向局部尺度的转换。localScale = globalScale / 2^(octaveNo).
+     *
+     * @param globalScale 全局尺度
+     * @param octaveNo    octave序号，从0开始
+     * @return 本octave内的尺度
+     */
+    public static float global2LocalScale(float globalScale, int octaveNo) {
+        return globalScale / (float) Math.pow(2, octaveNo);
     }
 }
 

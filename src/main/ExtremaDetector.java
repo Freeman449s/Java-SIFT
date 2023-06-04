@@ -18,9 +18,12 @@ public class ExtremaDetector {
     public ArrayList<KeyPoint> keyPoints = null;
 
     public ArrayList<KeyPoint> run(Mat grayFloat) throws InterruptedException, TimeoutException {
+        System.out.print("Detecting local extrema...");
         baseImage = prepareBaseImage(grayFloat);
-        ArrayList<Octave> octaves = generateOctaves(baseImage);
-        return detect(octaves);
+        octaves = generateOctaves(baseImage);
+        keyPoints = detect(octaves);
+        System.out.println("DONE");
+        return keyPoints;
     }
 
     /**
@@ -86,7 +89,7 @@ public class ExtremaDetector {
                     }
 
                     if (minFlag || maxFlag) {
-                        double scale = GlobalParam.SIGMA * Math.pow(2, finalI * 1.0 / GlobalParam.S) * Math.pow(2, finalOctaveNo);
+                        double scale = GlobalParam.SIGMA * Math.pow(2, finalI * 1.0 / GlobalParam.S) * Math.pow(2, finalOctaveNo); // σ × 2^(i/s) × 2^octave
                         KeyPoint keyPoint = new KeyPoint(x, y, (float) scale, -1, 0, finalOctaveNo);
                         synchronized (keyPoints) {
                             keyPoints.add(keyPoint);
