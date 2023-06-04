@@ -1,10 +1,10 @@
 package main;
 
+import flib.MathX;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 
-import java.security.Key;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -148,6 +148,18 @@ public class Util {
      */
     public static float global2LocalScale(float globalScale, int octaveNo) {
         return globalScale / (float) Math.pow(2, octaveNo);
+    }
+
+    /**
+     * 获取与关键点最接近的高斯图像的局部序号。此方法同样可以用于获取DoG图像的序号，但是需要注意，一个octave中DoG图像的数量会比高斯图像少1.
+     *
+     * @param keyPoint 关键点
+     * @return 与关键点最接近的高斯图像的局部序号
+     */
+    public static int getLocalGaussianImageId(KeyPoint keyPoint) {
+        return (int) Math.round(MathX.log2(
+                keyPoint.size / GlobalParam.SIGMA / Math.pow(2, keyPoint.octave))
+                * GlobalParam.S); // 本octave中的图像Id
     }
 }
 

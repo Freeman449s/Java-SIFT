@@ -75,6 +75,7 @@ public class KeyPointLocator {
         // 弱对比剔除
         float response = (float) pixelCube.get(1, 1)[1] + 0.5f * gradient.transpose().mmul(displace).get(0);
         if (Math.abs(response) < CONTRAST_CULLING_THRESHOLD) return null;
+        keyPoint.response = response;
         // 边缘剔除
         float trace = hessian.get(0, 0) + hessian.get(1, 1);
         float det = hessian.get(0, 0) * hessian.get(1, 1) -
@@ -106,9 +107,7 @@ public class KeyPointLocator {
      */
     private static Mat constructPixelCube(KeyPoint keyPoint, ArrayList<Mat> dogImages) throws IndexOutOfBoundsExceptionC {
         int intX = (int) Math.round(keyPoint.pt.x), intY = (int) Math.round(keyPoint.pt.y);
-        int imageId = (int) Math.round(MathX.log2(
-                keyPoint.size / GlobalParam.SIGMA / Math.pow(2, keyPoint.octave))
-                * GlobalParam.S); // 本octave中的图像Id
+        int imageId = Util.getLocalGaussianImageId(keyPoint); // 本octave中的图像Id
         if (imageId < 1 || imageId > dogImages.size() - 2)
             throw new IndexOutOfBoundsExceptionC("Image index " + imageId + " is out of bound.");
         Mat pixelCube = new Mat(3, 3, CV_32FC3);
