@@ -151,6 +151,16 @@ public class Util {
     }
 
     /**
+     * 取关键点在所在octave内的局部尺度
+     *
+     * @param keyPoint 关键点
+     * @return keyPoint在所在octave内的局部尺度
+     */
+    public static float getLocalScale(KeyPoint keyPoint) {
+        return global2LocalScale(keyPoint.size, keyPoint.octave);
+    }
+
+    /**
      * 获取与关键点最接近的高斯图像的局部序号。此方法同样可以用于获取DoG图像的序号，但是需要注意，一个octave中DoG图像的数量会比高斯图像少1.
      *
      * @param keyPoint 关键点
