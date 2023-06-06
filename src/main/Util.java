@@ -1,6 +1,7 @@
 package main;
 
 import flib.MathX;
+import org.jblas.FloatMatrix;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
@@ -170,6 +171,20 @@ public class Util {
         return (int) Math.round(MathX.log2(
                 keyPoint.size / GlobalParam.SIGMA / Math.pow(2, keyPoint.octave))
                 * GlobalParam.S); // 本octave中的图像Id
+    }
+
+    /**
+     * 使用有限微分计算(x,y)位置梯度的O(h^2)阶近似值。f'(x) = (f(x + 1) - f(x - 1)) / 2
+     *
+     * @param x 计算梯度的点的横坐标（列指标）
+     * @param y 计算梯度的点的纵坐标（行指标）
+     * @param image 计算梯度的图像
+     * @return (x,y)位置梯度的近似值
+     */
+    public static FloatMatrix computeGradient(int x, int y, Mat image) {
+        float dy = (float) (image.get(y + 1, x)[0] - image.get(y - 1, x)[0]) / 2;
+        float dx = (float) (image.get(y, x + 1)[0] - image.get(y, x - 1)[0]) / 2;
+        return new FloatMatrix(new float[]{dx, dy});
     }
 }
 

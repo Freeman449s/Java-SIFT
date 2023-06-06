@@ -53,4 +53,24 @@ public class MathX {
     public static double log2(double x) {
         return Math.log(x) / Math.log(2);
     }
+
+    /**
+     * 角度值转弧度值
+     *
+     * @param deg 角度值
+     * @return deg对应的弧度值
+     */
+    public static double deg2Rad(double deg) {
+        return deg / 180 * Math.PI;
+    }
+
+    /**
+     * 弧度值转角度值
+     *
+     * @param rad 弧度值
+     * @return rad对应的角度值
+     */
+    public static double rad2Deg(double rad) {
+        return rad / Math.PI * 180;
+    }
 }
