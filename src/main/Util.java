@@ -176,15 +176,29 @@ public class Util {
     /**
      * 使用有限微分计算(x,y)位置梯度的O(h^2)阶近似值。f'(x) = (f(x + 1) - f(x - 1)) / 2
      *
-     * @param x 计算梯度的点的横坐标（列指标）
-     * @param y 计算梯度的点的纵坐标（行指标）
+     * @param x     计算梯度的点的横坐标（列指标）
+     * @param y     计算梯度的点的纵坐标（行指标）
      * @param image 计算梯度的图像
-     * @return (x,y)位置梯度的近似值
+     * @return (x, y)位置梯度的近似值
      */
     public static FloatMatrix computeGradient(int x, int y, Mat image) {
         float dy = (float) (image.get(y + 1, x)[0] - image.get(y - 1, x)[0]) / 2;
         float dx = (float) (image.get(y, x + 1)[0] - image.get(y, x - 1)[0]) / 2;
         return new FloatMatrix(new float[]{dx, dy});
+    }
+
+    /**
+     * 对三维张量的指定元素进行自增操作。
+     *
+     * @param mat3d 三维张量
+     * @param row   行指标
+     * @param col   列指标
+     * @param z     深度指标
+     * @param delta 增量
+     */
+    public static void autoIncrement(Mat mat3d, int row, int col, int z, double delta) {
+        double originVal = mat3d.get(row, col)[z];
+        mat3d.put(new int[]{row, col, z}, originVal + delta);
     }
 }
 

@@ -33,8 +33,7 @@ public class DescriptorGenerator {
         for (int i = 0; i < N_BIN; i++)
             orientationsBinCenters.put(i, i * orientationBinWidth + orientationBinWidth / 2);
 
-        FloatMatrix descriptor = FloatMatrix.zeros(D * D * N_BIN);
-        Mat orientationTensor = Mat.zeros(new int[]{D, D, N_BIN}, CV_32F);
+        Mat tensor = Mat.zeros(new int[]{D + 2, D + 2, N_BIN}, CV_32F); // 由于是在5×5的网格内采样的，因此会有6×6个网格顶点，边缘的2行2列会被舍弃
 
         // 采样
         for (int i = -radius; i <= radius; i++) {
@@ -51,14 +50,15 @@ public class DescriptorGenerator {
                 if (yNorm < -(D + 1) / 2.0 || y > (D + 1) / 2.0 || xNorm < -(D + 1) / 2.0 || xNorm > (D + 1) / 2.0)
                     continue;
 
+                // 计算梯度、权重和朝向
                 FloatMatrix gradient = Util.computeGradient(x, y, gaussianImage.image);
                 float magnitude = gradient.norm2();
                 float weight = (float) MathX.gauss(Math.sqrt(yNorm * yNorm + xNorm * xNorm), 0.5 * D);
                 float weightedMagnitude = weight * magnitude;
                 float orientation = (float) (Math.atan2(gradient.get(1), gradient.get(0)) + Math.PI);
-                float orientationLocal = (orientation - keyPointRad + 2 * (float) Math.PI) % (2 * (float) Math.PI);
+                float orientationLocal = (orientation - keyPointRad + 2 * (float) Math.PI) % (2 * (float) Math.PI); // (0,2Pi)
 
-                // 计算相邻的bin序号
+                /*// 计算相邻的bin序号
                 int[] xAdjBinIds = getAdjacentBinIds(xNorm, spatialBinCenters), yAdjBinIds = getAdjacentBinIds(yNorm, spatialBinCenters),
                         orientationAdjBinIds = getAdjacentBinIds(orientationLocal, orientationsBinCenters);
                 // 计算在x，y，角度维度，在左侧bin上的权重 TODO 找一种简洁的方式实现
@@ -72,8 +72,63 @@ public class DescriptorGenerator {
                         xFraction = (xNorm - spatialBinCenters.get(xAdjBinIds[0])) / spatialBinWidth;
                         xFraction = 1 - xFraction;
                     }
+                }*/
+
+                // 计算相邻的bin序号
+                float xBin = xNorm + D / 2.0f + 0.5f, yBin = yNorm + D / 2.0f - 0.5f; // (0,D+1)
+                int xBinLeft = (int) Math.floor(xBin), yBinLeft = (int) Math.floor(yBin); // [0,D]
+                int xBinRight = xBinLeft + 1, yBinRight = yBinLeft + 1;
+                float orientationBin = orientationLocal / orientationBinWidth; // (0,N_BIN-1)
+                int orientationBinLeft = (int) Math.floor(orientationBin), // [0,N_BIN-1]
+                        orientationBinRight = (orientationBinLeft + 1) % N_BIN; // [1,N_BIN-1] ∪ {0}
+
+                // 计算在x，y，角度维度，在左侧bin上的权重
+                float xFraction, yFraction, orientationFraction;
+                xFraction = xBinRight - xBin; // 权重与另一侧的距离正相关
+                yFraction = yBinRight - yBin;
+                if (orientationBinRight < orientationBin) {
+                    orientationFraction = orientationBin - orientationBinLeft;
+                    orientationFraction = 1 - orientationFraction;
                 }
-                // TODO 计算剩下两个维度上的权重
+                else {
+                    orientationFraction = orientationBinRight - orientationBin;
+                }
+
+                // 逆向三线性插值
+                // 记号参考 https://en.wikipedia.org/wiki/Trilinear_interpolation
+                float c0 = xFraction * weightedMagnitude;
+                float c1 = (1 - xFraction) * weightedMagnitude;
+                float c00 = c0 * yFraction;
+                float c01 = c0 * (1 - yFraction);
+                float c10 = c1 * yFraction;
+                float c11 = c1 * (1 - yFraction);
+                float c000 = c00 * orientationFraction;
+                float c001 = c00 * (1 - orientationFraction);
+                float c010 = c01 * orientationFraction;
+                float c011 = c01 * (1 - orientationFraction);
+                float c100 = c10 * orientationFraction;
+                float c101 = c10 * (1 - orientationFraction);
+                float c110 = c11 * orientationFraction;
+                float c111 = c11 * (1 - orientationFraction);
+
+                // 更新张量
+                Util.autoIncrement(tensor, yBinLeft, xBinLeft, orientationBinLeft, c000);
+                Util.autoIncrement(tensor, yBinLeft, xBinLeft, orientationBinRight, c001);
+                Util.autoIncrement(tensor, yBinLeft, xBinRight, orientationBinLeft, c100); // x轴对应cxxx的第1维
+                Util.autoIncrement(tensor, yBinLeft, xBinRight, orientationBinRight, c101);
+                Util.autoIncrement(tensor, yBinRight, xBinLeft, orientationBinLeft, c010);
+                Util.autoIncrement(tensor, yBinRight, xBinLeft, orientationBinRight, c011);
+                Util.autoIncrement(tensor, yBinRight, xBinRight, orientationBinLeft, c110);
+                Util.autoIncrement(tensor, yBinRight, xBinRight, orientationBinRight, c111);
+            }
+        }
+
+        FloatMatrix descriptor = new FloatMatrix(0);
+
+        // TODO 张量展平为向量
+        for (int tRow = 1; tRow <= D; tRow++) { // 边缘2行2列舍弃
+            for (int tCol = 1; tCol <= D; tCol++) {
+                FloatMatrix.concatVertically(descriptor,new FloatMatrix())
             }
         }
     }
