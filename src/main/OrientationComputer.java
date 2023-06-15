@@ -16,6 +16,7 @@ public class OrientationComputer {
 
     // TODO 需要测试
     public ArrayList<KeyPoint> run(ArrayList<KeyPoint> keyPoints, ArrayList<Octave> octaves) {
+        System.out.print("Computing orientations...");
         ArrayList<KeyPoint> keyPointsWithOrientations = new ArrayList<>();
         for (KeyPoint keyPoint : keyPoints) {
             FloatMatrix hist = computeOrientationHist(keyPoint, octaves);
@@ -26,6 +27,7 @@ public class OrientationComputer {
                 keyPointsWithOrientations.add(keyPointWithOrientation);
             }
         }
+        System.out.println("DONE");
         return keyPointsWithOrientations;
     }
 

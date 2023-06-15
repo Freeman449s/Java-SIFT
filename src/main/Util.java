@@ -13,6 +13,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class Util {
+    public static float EPS = 1e-6f;
+
     public static double min(Size size) {
         return Math.min(size.height, size.width);
     }
@@ -199,6 +201,36 @@ public class Util {
     public static void autoIncrement(Mat mat3d, int row, int col, int z, double delta) {
         double originVal = mat3d.get(row, col)[z];
         mat3d.put(new int[]{row, col, z}, originVal + delta);
+    }
+
+    /**
+     * 将double类型数组转为float类型数组（可能导致精度损失）
+     *
+     * @param dblArray double类型数组
+     * @return 由dblArray转换而来的float类型数组
+     */
+    public static float[] toFloatArray(double[] dblArray) {
+        float[] fltArray = new float[dblArray.length];
+        for (int i = 0; i < dblArray.length; i++)
+            fltArray[i] = (float) dblArray[i];
+        return fltArray;
+    }
+
+    /**
+     * 将矩阵归一化。归一化后，矩阵的Frobenius范数为1. 该方法同样可用于向量的归一化。归一化后，向量的第二范数为1.
+     *
+     * @param matrix 矩阵
+     * @return 归一化后的矩阵
+     */
+    public static FloatMatrix normalize(FloatMatrix matrix) {
+        double norm = Math.max(matrix.norm2(), EPS);
+        FloatMatrix ret = new FloatMatrix(matrix.rows, matrix.columns);
+        for (int i = 0; i < matrix.rows; i++) {
+            for (int j = 0; j < matrix.columns; j++) {
+                ret.put(i, j, (float) (matrix.get(i, j) / norm));
+            }
+        }
+        return ret;
     }
 }
 

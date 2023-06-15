@@ -14,10 +14,12 @@ import static org.opencv.core.CvType.*;
  */
 public class DescriptorGenerator {
 
-    private static final int D = 4;     // 一条轴上的子区域数量
+    private static final int D = 4;                         // 一条轴上的子区域数量
+    private static final int N_BIN = 8;                     // 每张直方图的堆栈数量
+    private static final float DESCRIPTOR_MAX_VAL = 0.2f;   // 描述子中元素允许的最大值
 
-    private static final int N_BIN = 8; // 每张直方图的堆栈数量
-
+    // TODO 描述子使用类封装
+    // TODO 封装为可处理批量点的方法
     public FloatMatrix generate(KeyPoint keyPoint, ArrayList<Octave> octaves) {
         int localGaussianIdx = Util.getLocalGaussianImageId(keyPoint);
         float localScale = Util.getLocalScale(keyPoint);
@@ -89,8 +91,7 @@ public class DescriptorGenerator {
                 if (orientationBinRight < orientationBin) {
                     orientationFraction = orientationBin - orientationBinLeft;
                     orientationFraction = 1 - orientationFraction;
-                }
-                else {
+                } else {
                     orientationFraction = orientationBinRight - orientationBin;
                 }
 
@@ -124,13 +125,36 @@ public class DescriptorGenerator {
         }
 
         FloatMatrix descriptor = new FloatMatrix(0);
-
-        // TODO 张量展平为向量
         for (int tRow = 1; tRow <= D; tRow++) { // 边缘2行2列舍弃
             for (int tCol = 1; tCol <= D; tCol++) {
-                FloatMatrix.concatVertically(descriptor,new FloatMatrix())
+                // TODO 看一下Mat.get()返回的是什么
+                FloatMatrix.concatVertically(descriptor, new FloatMatrix(Util.toFloatArray(tensor.get(tRow, tCol))));
             }
         }
+
+        descriptor = postProcess(descriptor);
+
+        return descriptor;
+    }
+
+    /**
+     * 对描述子进行后处理：
+     * 1. 将传入的描述子归一化到单位长度；
+     * 2. 对任何超过允许的最大值（[Lowe 04]中规定为0.2）的元素，截断到允许的最大值；
+     * 3. 对向量重新进行归一化。
+     *
+     * @param descriptor 描述子
+     * @return 后处理后的描述子
+     */
+    private FloatMatrix postProcess(FloatMatrix descriptor) {
+        FloatMatrix normalized = Util.normalize(descriptor);
+        for (int i = 0; i < descriptor.length; i++) {
+            float val = descriptor.get(i);
+            if (val > DESCRIPTOR_MAX_VAL) val = DESCRIPTOR_MAX_VAL;
+            normalized.put(i, val);
+        }
+        normalized = Util.normalize(normalized);
+        return normalized;
     }
 
     /**
