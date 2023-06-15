@@ -7,10 +7,14 @@ import org.opencv.core.Mat;
 import org.opencv.core.Size;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 
 public class Util {
     public static float EPS = 1e-6f;
@@ -199,7 +203,7 @@ public class Util {
      * @param delta 增量
      */
     public static void autoIncrement(Mat mat3d, int row, int col, int z, double delta) {
-        double originVal = mat3d.get(row, col)[z];
+        double originVal = mat3d.get(new int[]{row, col, z})[0];
         mat3d.put(new int[]{row, col, z}, originVal + delta);
     }
 
@@ -229,6 +233,28 @@ public class Util {
             for (int j = 0; j < matrix.columns; j++) {
                 ret.put(i, j, (float) (matrix.get(i, j) / norm));
             }
+        }
+        return ret;
+    }
+
+    /**
+     * 将张量中idx位置的子张量展平为向量
+     *
+     * @param mat 矩阵
+     * @param idx 需要展平的位置
+     * @return 张量mat的idx处的子张量展平得到的向量
+     */
+    public static ArrayList<Double> flatten(Mat mat, int... idx) {
+        if (idx.length == mat.dims()) { // 递归终点
+            return DoubleStream.of(mat.get(idx)).boxed().collect(Collectors.toCollection(ArrayList::new));
+        }
+
+        int[] newIdx = new int[idx.length + 1];
+        System.arraycopy(idx, 0, newIdx, 0, idx.length);
+        ArrayList<Double> ret = new ArrayList<>();
+        for (int i = 0; i < mat.size(idx.length); i++) {
+            newIdx[newIdx.length - 1] = i;
+            ret.addAll(flatten(mat, newIdx));
         }
         return ret;
     }

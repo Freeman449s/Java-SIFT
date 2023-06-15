@@ -4,6 +4,8 @@ import flib.MathX;
 import org.jblas.FloatMatrix;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
+import org.opencv.core.Scalar;
+import test.Test;
 
 import java.util.ArrayList;
 
@@ -35,21 +37,22 @@ public class DescriptorGenerator {
         for (int i = 0; i < N_BIN; i++)
             orientationsBinCenters.put(i, i * orientationBinWidth + orientationBinWidth / 2);
 
-        Mat tensor = Mat.zeros(new int[]{D + 2, D + 2, N_BIN}, CV_32F); // 由于是在5×5的网格内采样的，因此会有6×6个网格顶点，边缘的2行2列会被舍弃
+        //Mat tensor = Mat.zeros(new int[]{D + 2, D + 2, N_BIN}, CV_32F); // 会抛出unknown exception
+        Mat tensor = new Mat(new int[]{D + 2, D + 2, N_BIN}, CV_32F, new Scalar(0)); // 由于是在5×5的网格内采样的，因此会有6×6个网格顶点，边缘的2行2列会被舍弃
 
         // 采样
         for (int i = -radius; i <= radius; i++) {
-            int x = Math.round((float) keyPoint.pt.x + i);
+            int x = Math.round((float) keyPoint.pt.x + i); // 像素坐标
             if (x < 1 || x >= width - 1) continue; // 计算梯度需要左右两个像素的值，因此边界检查需要留出1的边距
             for (int j = -radius; j <= radius; j++) {
                 int y = Math.round((float) keyPoint.pt.y + j);
                 if (y < 1 || y >= height - 1) continue;
 
-                // 坐标转换到与朝向相关的局部坐标系
-                float yLocal = x * (float) Math.sin(keyPointRad) + y * (float) Math.cos(keyPointRad);
-                float xLocal = x * (float) Math.cos(keyPointRad) - y * (float) Math.sin(keyPointRad);
+                // 局部采样坐标转换到与朝向相关的局部坐标系
+                float yLocal = j * (float) Math.sin(keyPointRad) + i * (float) Math.cos(keyPointRad);
+                float xLocal = j * (float) Math.cos(keyPointRad) - i * (float) Math.sin(keyPointRad);
                 float yNorm = yLocal / subregionWidth, xNorm = xLocal / subregionWidth; // 归一化并约束在(-(D+1)/2,(D+1)/2)范围，越界的点跳过
-                if (yNorm < -(D + 1) / 2.0 || y > (D + 1) / 2.0 || xNorm < -(D + 1) / 2.0 || xNorm > (D + 1) / 2.0)
+                if (yNorm < -(D + 1) / 2.0 || yNorm > (D + 1) / 2.0 || xNorm < -(D + 1) / 2.0 || xNorm > (D + 1) / 2.0)
                     continue;
 
                 // 计算梯度、权重和朝向
@@ -128,7 +131,14 @@ public class DescriptorGenerator {
         for (int tRow = 1; tRow <= D; tRow++) { // 边缘2行2列舍弃
             for (int tCol = 1; tCol <= D; tCol++) {
                 // TODO 看一下Mat.get()返回的是什么
-                FloatMatrix.concatVertically(descriptor, new FloatMatrix(Util.toFloatArray(tensor.get(tRow, tCol))));
+                ArrayList<Double> histArray = Util.flatten(tensor, tRow, tCol);
+                FloatMatrix histJblas = new FloatMatrix(histArray.size());
+                for (int i = 0; i < histArray.size(); i++) {
+                    Double elem = histArray.get(i);
+                    float flt = Float.parseFloat(String.valueOf(elem));
+                    histJblas.put(i, flt);
+                }
+                descriptor = FloatMatrix.concatVertically(descriptor, histJblas);
             }
         }
 
