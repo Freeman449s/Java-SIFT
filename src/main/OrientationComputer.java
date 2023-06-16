@@ -14,7 +14,6 @@ public class OrientationComputer {
     private static final int N_BIN = 36;            // 朝向直方图的堆栈数量
     private static final float PEAK_RATIO = 0.8f;   // 峰值比例；如果朝向直方图中某个堆栈的值大于最大值的一定比例，则会在此堆栈对应的方向上也建立一个关键点
 
-    // TODO 需要测试
     public ArrayList<KeyPoint> run(ArrayList<KeyPoint> keyPoints, ArrayList<Octave> octaves) {
         System.out.print("Computing orientations...");
         ArrayList<KeyPoint> keyPointsWithOrientations = new ArrayList<>();

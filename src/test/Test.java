@@ -26,8 +26,7 @@ public class Test {
         normalize(gray, gray, 0, 1, NORM_MINMAX, CV_32F);
         try {
             descriptorTest(gray);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -66,8 +65,7 @@ public class Test {
             Util.foreachPixelParallelDo(gray.width(), gray.height(), (x, y) -> {
                 for (int i = 0; i < 100; i++) grayCopy3.put(y, x, gray.get(y, x)[0]);
             });
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
         endTime = System.currentTimeMillis();
@@ -106,14 +104,7 @@ public class Test {
 
         DescriptorGenerator descriptorGenerator = new DescriptorGenerator();
         ArrayList<FloatMatrix> descriptors = new ArrayList<>();
-        try {
-            for (KeyPoint keyPoint : keyPointsWithOrientation)
-                descriptors.add(descriptorGenerator.generate(keyPoint, octaves));
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-
-        System.out.println(descriptors);
+        for (KeyPoint keyPoint : keyPointsWithOrientation)
+            descriptors.add(descriptorGenerator.generate(keyPoint, octaves));
     }
 }

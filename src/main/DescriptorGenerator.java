@@ -22,6 +22,7 @@ public class DescriptorGenerator {
 
     // TODO 描述子使用类封装
     // TODO 封装为可处理批量点的方法
+    @SuppressWarnings("DuplicatedCode")
     public FloatMatrix generate(KeyPoint keyPoint, ArrayList<Octave> octaves) {
         int localGaussianIdx = Util.getLocalGaussianImageId(keyPoint);
         float localScale = Util.getLocalScale(keyPoint);
@@ -37,8 +38,7 @@ public class DescriptorGenerator {
         for (int i = 0; i < N_BIN; i++)
             orientationsBinCenters.put(i, i * orientationBinWidth + orientationBinWidth / 2);
 
-        Mat tensor = Mat.zeros(new int[]{D + 2, D + 2, N_BIN}, CV_32F);
-        //Mat tensor = new Mat(new int[]{D + 2, D + 2, N_BIN}, CV_32F, new Scalar(0)); // 由于是在5×5的网格内采样的，因此会有6×6个网格顶点，边缘的2行2列会被舍弃
+        Mat tensor = Mat.zeros(new int[]{D + 2, D + 2, N_BIN}, CV_32F); // 由于是在5×5的网格内采样的，因此会有6×6个网格顶点，边缘的2行2列会被舍弃
 
         // 采样
         for (int i = -radius; i <= radius; i++) {
@@ -52,7 +52,7 @@ public class DescriptorGenerator {
                 float yLocal = j * (float) Math.sin(keyPointRad) + i * (float) Math.cos(keyPointRad);
                 float xLocal = j * (float) Math.cos(keyPointRad) - i * (float) Math.sin(keyPointRad);
                 float yNorm = yLocal / subregionWidth, xNorm = xLocal / subregionWidth; // 归一化并约束在(-(D+1)/2,(D+1)/2)范围，越界的点跳过
-                if (yNorm < -(D + 1) / 2.0 || yNorm > (D + 1) / 2.0 || xNorm < -(D + 1) / 2.0 || xNorm > (D + 1) / 2.0)
+                if (yNorm <= -(D + 1) / 2.0f || yNorm >= (D + 1) / 2.0f || xNorm <= -(D + 1) / 2.0f || xNorm >= (D + 1) / 2.0f)
                     continue;
 
                 // 计算梯度、权重和朝向
@@ -61,7 +61,7 @@ public class DescriptorGenerator {
                 float weight = (float) MathX.gauss(Math.sqrt(yNorm * yNorm + xNorm * xNorm), 0.5 * D);
                 float weightedMagnitude = weight * magnitude;
                 float orientation = (float) (Math.atan2(gradient.get(1), gradient.get(0)) + Math.PI);
-                float orientationLocal = (orientation - keyPointRad + 2 * (float) Math.PI) % (2 * (float) Math.PI); // (0,2Pi)
+                float orientationLocal = (orientation - keyPointRad + 2 * (float) Math.PI) % (2 * (float) Math.PI); // [0,2Pi)
 
                 /*// 计算相邻的bin序号
                 int[] xAdjBinIds = getAdjacentBinIds(xNorm, spatialBinCenters), yAdjBinIds = getAdjacentBinIds(yNorm, spatialBinCenters),
@@ -80,12 +80,14 @@ public class DescriptorGenerator {
                 }*/
 
                 // 计算相邻的bin序号
-                float xBin = xNorm + D / 2.0f + 0.5f, yBin = yNorm + D / 2.0f - 0.5f; // (0,D+1)
+                float xBin = xNorm + D / 2.0f + 0.5f, yBin = yNorm + D / 2.0f + 0.5f; // (0,D+1)
                 int xBinLeft = (int) Math.floor(xBin), yBinLeft = (int) Math.floor(yBin); // [0,D]
                 int xBinRight = xBinLeft + 1, yBinRight = yBinLeft + 1;
-                float orientationBin = orientationLocal / orientationBinWidth; // (0,N_BIN-1)
+                float orientationBin = orientationLocal / orientationBinWidth; // [0,N_BIN)
                 int orientationBinLeft = (int) Math.floor(orientationBin), // [0,N_BIN-1]
                         orientationBinRight = (orientationBinLeft + 1) % N_BIN; // [1,N_BIN-1] ∪ {0}
+                if (xBinLeft < 0 || xBinLeft > D || yBinLeft < 0 || yBinLeft > D || orientationBinLeft < 0 || orientationBinLeft > N_BIN - 1)
+                    continue; // 越界检查
 
                 // 计算在x，y，角度维度，在左侧bin上的权重
                 float xFraction, yFraction, orientationFraction;
@@ -94,8 +96,7 @@ public class DescriptorGenerator {
                 if (orientationBinRight < orientationBin) {
                     orientationFraction = orientationBin - orientationBinLeft;
                     orientationFraction = 1 - orientationFraction;
-                }
-                else {
+                } else {
                     orientationFraction = orientationBinRight - orientationBin;
                 }
 
@@ -117,6 +118,8 @@ public class DescriptorGenerator {
                 float c111 = c11 * (1 - orientationFraction);
 
                 // 更新张量
+                /*System.out.printf("xBinLeft: %d, yBinLeft: %d, orientationBinLeft: %d, tensor size: {%d, %d, %d}\n", xBinLeft, yBinLeft, orientationBinLeft,
+                        D + 2, D + 2, N_BIN);*/
                 Util.autoIncrement(tensor, yBinLeft, xBinLeft, orientationBinLeft, c000);
                 Util.autoIncrement(tensor, yBinLeft, xBinLeft, orientationBinRight, c001);
                 Util.autoIncrement(tensor, yBinLeft, xBinRight, orientationBinLeft, c100); // x轴对应cxxx的第1维
@@ -131,7 +134,6 @@ public class DescriptorGenerator {
         FloatMatrix descriptor = new FloatMatrix(0);
         for (int tRow = 1; tRow <= D; tRow++) { // 边缘2行2列舍弃
             for (int tCol = 1; tCol <= D; tCol++) {
-                // TODO 看一下Mat.get()返回的是什么
                 ArrayList<Double> histArray = Util.flatten(tensor, tRow, tCol);
                 FloatMatrix histJblas = new FloatMatrix(histArray.size());
                 for (int i = 0; i < histArray.size(); i++) {
