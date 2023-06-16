@@ -7,12 +7,18 @@ import org.opencv.core.Mat;
 import org.opencv.core.Size;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 
 public class Util {
+    public static float EPS = 1e-6f;
+
     public static double min(Size size) {
         return Math.min(size.height, size.width);
     }
@@ -176,15 +182,81 @@ public class Util {
     /**
      * 使用有限微分计算(x,y)位置梯度的O(h^2)阶近似值。f'(x) = (f(x + 1) - f(x - 1)) / 2
      *
-     * @param x 计算梯度的点的横坐标（列指标）
-     * @param y 计算梯度的点的纵坐标（行指标）
+     * @param x     计算梯度的点的横坐标（列指标）
+     * @param y     计算梯度的点的纵坐标（行指标）
      * @param image 计算梯度的图像
-     * @return (x,y)位置梯度的近似值
+     * @return (x, y)位置梯度的近似值
      */
     public static FloatMatrix computeGradient(int x, int y, Mat image) {
         float dy = (float) (image.get(y + 1, x)[0] - image.get(y - 1, x)[0]) / 2;
         float dx = (float) (image.get(y, x + 1)[0] - image.get(y, x - 1)[0]) / 2;
         return new FloatMatrix(new float[]{dx, dy});
+    }
+
+    /**
+     * 对三维张量的指定元素进行自增操作。
+     *
+     * @param mat3d 三维张量
+     * @param row   行指标
+     * @param col   列指标
+     * @param z     深度指标
+     * @param delta 增量
+     */
+    public static void autoIncrement(Mat mat3d, int row, int col, int z, double delta) {
+        double originVal = mat3d.get(new int[]{row, col, z})[0];
+        mat3d.put(new int[]{row, col, z}, originVal + delta);
+    }
+
+    /**
+     * 将double类型数组转为float类型数组（可能导致精度损失）
+     *
+     * @param dblArray double类型数组
+     * @return 由dblArray转换而来的float类型数组
+     */
+    public static float[] toFloatArray(double[] dblArray) {
+        float[] fltArray = new float[dblArray.length];
+        for (int i = 0; i < dblArray.length; i++)
+            fltArray[i] = (float) dblArray[i];
+        return fltArray;
+    }
+
+    /**
+     * 将矩阵归一化。归一化后，矩阵的Frobenius范数为1. 该方法同样可用于向量的归一化。归一化后，向量的第二范数为1.
+     *
+     * @param matrix 矩阵
+     * @return 归一化后的矩阵
+     */
+    public static FloatMatrix normalize(FloatMatrix matrix) {
+        double norm = Math.max(matrix.norm2(), EPS);
+        FloatMatrix ret = new FloatMatrix(matrix.rows, matrix.columns);
+        for (int i = 0; i < matrix.rows; i++) {
+            for (int j = 0; j < matrix.columns; j++) {
+                ret.put(i, j, (float) (matrix.get(i, j) / norm));
+            }
+        }
+        return ret;
+    }
+
+    /**
+     * 将张量中idx位置的子张量展平为向量
+     *
+     * @param mat 矩阵
+     * @param idx 需要展平的位置
+     * @return 张量mat的idx处的子张量展平得到的向量
+     */
+    public static ArrayList<Double> flatten(Mat mat, int... idx) {
+        if (idx.length == mat.dims()) { // 递归终点
+            return DoubleStream.of(mat.get(idx)).boxed().collect(Collectors.toCollection(ArrayList::new));
+        }
+
+        int[] newIdx = new int[idx.length + 1];
+        System.arraycopy(idx, 0, newIdx, 0, idx.length);
+        ArrayList<Double> ret = new ArrayList<>();
+        for (int i = 0; i < mat.size(idx.length); i++) {
+            newIdx[newIdx.length - 1] = i;
+            ret.addAll(flatten(mat, newIdx));
+        }
+        return ret;
     }
 }
 

@@ -1,5 +1,6 @@
 package test;
 
+import org.jblas.FloatMatrix;
 import org.opencv.core.*;
 
 import static org.opencv.core.Core.*;
@@ -24,7 +25,7 @@ public class Test {
         //System.out.printf("Min value = %.3f, max value = %.3f\n", Util.min(gray), Util.max(gray));
         normalize(gray, gray, 0, 1, NORM_MINMAX, CV_32F);
         try {
-            locatorTest(gray);
+            descriptorTest(gray);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -88,5 +89,22 @@ public class Test {
         KeyPointLocator locator = new KeyPointLocator();
         ArrayList<KeyPoint> keyPoints = locator.run(coarseKeyPoints, octaves);
         System.out.println();
+    }
+
+    private static void descriptorTest(Mat gray) throws InterruptedException, TimeoutException {
+        ExtremaDetector extremaDetector = new ExtremaDetector();
+        ArrayList<KeyPoint> coarseKeyPoints = extremaDetector.run(gray);
+        ArrayList<Octave> octaves = extremaDetector.octaves;
+
+        KeyPointLocator locator = new KeyPointLocator();
+        ArrayList<KeyPoint> keyPoints = locator.run(coarseKeyPoints, octaves);
+
+        OrientationComputer orientationComputer = new OrientationComputer();
+        ArrayList<KeyPoint> keyPointsWithOrientation = orientationComputer.run(keyPoints, octaves);
+
+        DescriptorGenerator descriptorGenerator = new DescriptorGenerator();
+        ArrayList<FloatMatrix> descriptors = new ArrayList<>();
+        for (KeyPoint keyPoint : keyPointsWithOrientation)
+            descriptors.add(descriptorGenerator.generate(keyPoint, octaves));
     }
 }
