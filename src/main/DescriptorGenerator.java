@@ -37,8 +37,8 @@ public class DescriptorGenerator {
         for (int i = 0; i < N_BIN; i++)
             orientationsBinCenters.put(i, i * orientationBinWidth + orientationBinWidth / 2);
 
-        //Mat tensor = Mat.zeros(new int[]{D + 2, D + 2, N_BIN}, CV_32F); // 会抛出unknown exception
-        Mat tensor = new Mat(new int[]{D + 2, D + 2, N_BIN}, CV_32F, new Scalar(0)); // 由于是在5×5的网格内采样的，因此会有6×6个网格顶点，边缘的2行2列会被舍弃
+        Mat tensor = Mat.zeros(new int[]{D + 2, D + 2, N_BIN}, CV_32F);
+        //Mat tensor = new Mat(new int[]{D + 2, D + 2, N_BIN}, CV_32F, new Scalar(0)); // 由于是在5×5的网格内采样的，因此会有6×6个网格顶点，边缘的2行2列会被舍弃
 
         // 采样
         for (int i = -radius; i <= radius; i++) {
@@ -66,7 +66,7 @@ public class DescriptorGenerator {
                 /*// 计算相邻的bin序号
                 int[] xAdjBinIds = getAdjacentBinIds(xNorm, spatialBinCenters), yAdjBinIds = getAdjacentBinIds(yNorm, spatialBinCenters),
                         orientationAdjBinIds = getAdjacentBinIds(orientationLocal, orientationsBinCenters);
-                // 计算在x，y，角度维度，在左侧bin上的权重 TODO 找一种简洁的方式实现
+                // 计算在x，y，角度维度，在左侧bin上的权重
                 float xFraction, yFraction, orientationFraction;
                 if (xAdjBinIds[0] < xAdjBinIds[1])  // 非边界情况
                     xFraction = (spatialBinCenters.get(xAdjBinIds[1]) - xNorm) / spatialBinWidth; // 权重与另一侧的距离正相关
@@ -94,7 +94,8 @@ public class DescriptorGenerator {
                 if (orientationBinRight < orientationBin) {
                     orientationFraction = orientationBin - orientationBinLeft;
                     orientationFraction = 1 - orientationFraction;
-                } else {
+                }
+                else {
                     orientationFraction = orientationBinRight - orientationBin;
                 }
 
