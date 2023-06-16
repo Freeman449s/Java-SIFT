@@ -74,22 +74,6 @@ public class DescriptorGenerator {
                 float orientation = (float) (Math.atan2(gradient.get(1), gradient.get(0)) + Math.PI);
                 float orientationLocal = (orientation - keyPointRad + 2 * (float) Math.PI) % (2 * (float) Math.PI); // [0,2Pi)
 
-                /*// 计算相邻的bin序号
-                int[] xAdjBinIds = getAdjacentBinIds(xNorm, spatialBinCenters), yAdjBinIds = getAdjacentBinIds(yNorm, spatialBinCenters),
-                        orientationAdjBinIds = getAdjacentBinIds(orientationLocal, orientationsBinCenters);
-                // 计算在x，y，角度维度，在左侧bin上的权重
-                float xFraction, yFraction, orientationFraction;
-                if (xAdjBinIds[0] < xAdjBinIds[1])  // 非边界情况
-                    xFraction = (spatialBinCenters.get(xAdjBinIds[1]) - xNorm) / spatialBinWidth; // 权重与另一侧的距离正相关
-                else { // 边界情况
-                    if (xNorm < 0) // 左边界
-                        xFraction = (spatialBinCenters.get(xAdjBinIds[1]) - xNorm) / spatialBinWidth;
-                    else { // 右边界
-                        xFraction = (xNorm - spatialBinCenters.get(xAdjBinIds[0])) / spatialBinWidth;
-                        xFraction = 1 - xFraction;
-                    }
-                }*/
-
                 // 计算相邻的bin序号
                 float xBin = xNorm + D / 2.0f + 0.5f, yBin = yNorm + D / 2.0f + 0.5f; // (0,D+1)
                 int xBinLeft = (int) Math.floor(xBin), yBinLeft = (int) Math.floor(yBin); // [0,D]
