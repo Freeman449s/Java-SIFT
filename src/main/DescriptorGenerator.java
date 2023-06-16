@@ -20,10 +20,15 @@ public class DescriptorGenerator {
     private static final int N_BIN = 8;                     // 每张直方图的堆栈数量
     private static final float DESCRIPTOR_MAX_VAL = 0.2f;   // 描述子中元素允许的最大值
 
-    // TODO 描述子使用类封装
-    // TODO 封装为可处理批量点的方法
+    public ArrayList<Descriptor> run(ArrayList<KeyPoint> keyPoints, ArrayList<Octave> octaves) {
+        ArrayList<Descriptor> descriptors = new ArrayList<>();
+        for (KeyPoint keyPoint : keyPoints)
+            descriptors.add(generate(keyPoint, octaves));
+        return descriptors;
+    }
+
     @SuppressWarnings("DuplicatedCode")
-    public FloatMatrix generate(KeyPoint keyPoint, ArrayList<Octave> octaves) {
+    public Descriptor generate(KeyPoint keyPoint, ArrayList<Octave> octaves) {
         int localGaussianIdx = Util.getLocalGaussianImageId(keyPoint);
         float localScale = Util.getLocalScale(keyPoint);
         GaussianImage gaussianImage = octaves.get(keyPoint.octave).gaussianImages.get(localGaussianIdx);
@@ -147,7 +152,7 @@ public class DescriptorGenerator {
 
         descriptor = postProcess(descriptor);
 
-        return descriptor;
+        return new Descriptor(keyPoint, descriptor);
     }
 
     /**

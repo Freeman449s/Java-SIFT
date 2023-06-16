@@ -103,8 +103,6 @@ public class Test {
         ArrayList<KeyPoint> keyPointsWithOrientation = orientationComputer.run(keyPoints, octaves);
 
         DescriptorGenerator descriptorGenerator = new DescriptorGenerator();
-        ArrayList<FloatMatrix> descriptors = new ArrayList<>();
-        for (KeyPoint keyPoint : keyPointsWithOrientation)
-            descriptors.add(descriptorGenerator.generate(keyPoint, octaves));
+        ArrayList<Descriptor> descriptors = descriptorGenerator.run(keyPointsWithOrientation, octaves);
     }
 }
