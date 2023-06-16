@@ -42,7 +42,7 @@ public class Visualization {
         for (KeyPoint keyPoint : keyPoints) {
             float[] pos = Util.relocate(keyPoint, imageOctave);
             Point point = new Point(new double[]{pos[0], pos[1]});
-            Imgproc.circle(imageWithPoints, point, 1, CVColor.cyan.getState());
+            Imgproc.circle(imageWithPoints, point, 1, CVColor.green.getState());
         }
 
         return imageWithPoints;
