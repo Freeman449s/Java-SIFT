@@ -258,5 +258,19 @@ public class Util {
         }
         return ret;
     }
+
+    /**
+     * 计算keyPoint在目标octave下的位置
+     *
+     * @param keyPoint     关键点
+     * @param targetOctave 目标octave
+     * @return keyPoint在目标octave下的位置
+     */
+    public static float[] relocate(KeyPoint keyPoint, int targetOctave) {
+        float[] pos = new float[2];
+        pos[0] = (float) (keyPoint.pt.x * Math.pow(2, keyPoint.octave) / Math.pow(2, targetOctave));
+        pos[1] = (float) (keyPoint.pt.y * Math.pow(2, keyPoint.octave) / Math.pow(2, targetOctave));
+        return pos;
+    }
 }
 

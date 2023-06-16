@@ -1,16 +1,18 @@
 package test;
 
-import org.jblas.FloatMatrix;
 import org.opencv.core.*;
 
 import static org.opencv.core.Core.*;
 import static org.opencv.core.CvType.*;
+import static org.opencv.highgui.HighGui.imshow;
+import static org.opencv.highgui.HighGui.waitKey;
 import static org.opencv.imgcodecs.Imgcodecs.*;
 
 import main.*;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 
 import java.math.*;
-import java.security.Key;
 import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
 
@@ -21,11 +23,12 @@ public class Test {
     }
 
     public static void main(String[] args) {
-        Mat gray = imread("image/box.png", IMREAD_GRAYSCALE);
+        String imagePath = "image/box.png";
+        Mat gray = imread(imagePath, IMREAD_GRAYSCALE);
         //System.out.printf("Min value = %.3f, max value = %.3f\n", Util.min(gray), Util.max(gray));
         normalize(gray, gray, 0, 1, NORM_MINMAX, CV_32F);
         try {
-            descriptorTest(gray);
+            siftTest(imagePath);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -103,6 +106,25 @@ public class Test {
         ArrayList<KeyPoint> keyPointsWithOrientation = orientationComputer.run(keyPoints, octaves);
 
         DescriptorGenerator descriptorGenerator = new DescriptorGenerator();
-        ArrayList<Descriptor> descriptors = descriptorGenerator.run(keyPointsWithOrientation, octaves);
+        ArrayList<KeyPointX> keyPointsWithDescriptor = new ArrayList<>();
+        for (KeyPoint keyPoint : keyPointsWithOrientation) {
+            keyPointsWithDescriptor.add(new KeyPointX(keyPoint, descriptorGenerator.generate(keyPoint, octaves)));
+        }
+    }
+
+    private static void siftTest(String path) {
+        Mat image = Imgcodecs.imread(path);
+        Mat gray = new Mat();
+        Imgproc.cvtColor(image, gray, Imgproc.COLOR_BGR2GRAY);
+        Mat grayFloat = new Mat();
+        normalize(gray, grayFloat, 0, 1, NORM_MINMAX, CV_32F);
+
+        SIFT sift = new SIFT(grayFloat);
+        ArrayList<KeyPointX> keyPointsWithDescriptor = sift.run();
+        ArrayList<KeyPoint> keyPoints = sift.getKeyPoints();
+        Mat markedImage = Visualization.visualize(image, keyPoints);
+        normalize(markedImage, markedImage, 0, 255, NORM_MINMAX, CV_8UC1);
+        imshow("Marked Image", markedImage);
+        waitKey();
     }
 }

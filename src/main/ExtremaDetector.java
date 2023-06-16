@@ -1,5 +1,6 @@
 package main;
 
+import flib.MathX;
 import org.opencv.core.*;
 
 import java.util.*;
@@ -17,6 +18,14 @@ public class ExtremaDetector {
     public ArrayList<Octave> octaves = null;
     public ArrayList<KeyPoint> keyPoints = null;
 
+    /**
+     * 运行尺度空间极值检测
+     *
+     * @param grayFloat float类型的灰度图像
+     * @return 经过尺度空间极值检测寻找到的粗糙关键点
+     * @throws InterruptedException 如果线程池在等待线程运行完毕时被中断，将抛出此异常
+     * @throws TimeoutException     如果极值检测未能在规定时间（1小时）内完成，将抛出此异常
+     */
     public ArrayList<KeyPoint> run(Mat grayFloat) throws InterruptedException, TimeoutException {
         System.out.print("Detecting local extrema...");
         baseImage = prepareBaseImage(grayFloat);
@@ -24,6 +33,18 @@ public class ExtremaDetector {
         keyPoints = detect(octaves);
         System.out.println("DONE");
         return keyPoints;
+    }
+
+    /**
+     * 计算基于image建立的尺度空间的octave数
+     *
+     * @param image 图像
+     * @return 基于image建立的尺度空间的octave数
+     */
+    public static int computeNumOfOctaves(Mat image) {
+        // floor(k)+1, k=log2(w/MIN_SIDE_LEN)
+        // Size对象只记录前2维的尺寸，故不必对多通道图像做安全检查
+        return (int) Math.floor(MathX.log2(Util.min(image.size()) * 1.0f / MIN_SIDE_LEN)) + 1;
     }
 
     /**
@@ -47,7 +68,7 @@ public class ExtremaDetector {
      */
     private static ArrayList<Octave> generateOctaves(Mat baseImage) {
         ArrayList<Octave> octaves = new ArrayList<>();
-        while (Util.min(baseImage.size()) > MIN_SIDE_LEN) {
+        while (Util.min(baseImage.size()) >= MIN_SIDE_LEN) {
             Octave octave = new Octave(baseImage, GlobalParam.SIGMA, GlobalParam.S);
             octaves.add(octave);
             // 取栈中倒数第3张图像作为下一个octave的栈底图像，这张图像的scale恰为2*SIGMA

@@ -4,8 +4,6 @@ import flib.MathX;
 import org.jblas.FloatMatrix;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
-import org.opencv.core.Scalar;
-import test.Test;
 
 import java.util.ArrayList;
 
@@ -20,15 +18,23 @@ public class DescriptorGenerator {
     private static final int N_BIN = 8;                     // 每张直方图的堆栈数量
     private static final float DESCRIPTOR_MAX_VAL = 0.2f;   // 描述子中元素允许的最大值
 
-    public ArrayList<Descriptor> run(ArrayList<KeyPoint> keyPoints, ArrayList<Octave> octaves) {
-        ArrayList<Descriptor> descriptors = new ArrayList<>();
-        for (KeyPoint keyPoint : keyPoints)
-            descriptors.add(generate(keyPoint, octaves));
+    public ArrayList<KeyPointX> keyPointsWithDescriptor;
+
+    public ArrayList<FloatMatrix> run(ArrayList<KeyPoint> keyPoints, ArrayList<Octave> octaves) {
+        System.out.print("Generating descriptors...");
+        ArrayList<FloatMatrix> descriptors = new ArrayList<>(keyPoints.size());
+        keyPointsWithDescriptor = new ArrayList<>(keyPoints.size());
+        for (KeyPoint keyPoint : keyPoints) {
+            FloatMatrix descriptor = generate(keyPoint, octaves);
+            descriptors.add(descriptor);
+            keyPointsWithDescriptor.add(new KeyPointX(keyPoint, descriptor));
+        }
+        System.out.println("DONE");
         return descriptors;
     }
 
     @SuppressWarnings("DuplicatedCode")
-    public Descriptor generate(KeyPoint keyPoint, ArrayList<Octave> octaves) {
+    public FloatMatrix generate(KeyPoint keyPoint, ArrayList<Octave> octaves) {
         int localGaussianIdx = Util.getLocalGaussianImageId(keyPoint);
         float localScale = Util.getLocalScale(keyPoint);
         GaussianImage gaussianImage = octaves.get(keyPoint.octave).gaussianImages.get(localGaussianIdx);
@@ -152,7 +158,7 @@ public class DescriptorGenerator {
 
         descriptor = postProcess(descriptor);
 
-        return new Descriptor(keyPoint, descriptor);
+        return descriptor;
     }
 
     /**
