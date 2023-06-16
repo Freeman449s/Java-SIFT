@@ -6,6 +6,10 @@ import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.opencv.core.CvType.*;
 
@@ -20,15 +24,36 @@ public class DescriptorGenerator {
 
     public ArrayList<KeyPointX> keyPointsWithDescriptor;
 
-    public ArrayList<FloatMatrix> run(ArrayList<KeyPoint> keyPoints, ArrayList<Octave> octaves) {
+    public ArrayList<FloatMatrix> run(ArrayList<KeyPoint> keyPoints, ArrayList<Octave> octaves) throws InterruptedException, TimeoutException {
+        return run(keyPoints, octaves, false); // TODO 测试通过后改为true
+    }
+
+    public ArrayList<FloatMatrix> run(ArrayList<KeyPoint> keyPoints, ArrayList<Octave> octaves, boolean parallel) throws InterruptedException, TimeoutException {
         System.out.print("Generating descriptors...");
         ArrayList<FloatMatrix> descriptors = new ArrayList<>(keyPoints.size());
         keyPointsWithDescriptor = new ArrayList<>(keyPoints.size());
-        for (KeyPoint keyPoint : keyPoints) {
-            FloatMatrix descriptor = generate(keyPoint, octaves);
-            descriptors.add(descriptor);
-            keyPointsWithDescriptor.add(new KeyPointX(keyPoint, descriptor));
+
+        int nCore = Runtime.getRuntime().availableProcessors();
+        if (keyPoints.size() < nCore) parallel = false;
+
+        if (!parallel) {
+            for (KeyPoint keyPoint : keyPoints) {
+                FloatMatrix descriptor = generate(keyPoint, octaves);
+                descriptors.add(descriptor);
+                keyPointsWithDescriptor.add(new KeyPointX(keyPoint, descriptor));
+            }
+        } else {
+            // 任务划分
+            int //TODO
+            ExecutorService executorService = Executors.newCachedThreadPool();
+
+            executorService.shutdown();
+            long timeout = 3600;
+            if (!executorService.awaitTermination(timeout, TimeUnit.SECONDS)) {
+                throw new TimeoutException("Parallel pixel operations failed to finish within " + timeout + " seconds.");
+            }
         }
+
         System.out.println("DONE");
         return descriptors;
     }
