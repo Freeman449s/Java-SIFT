@@ -44,14 +44,37 @@ public class DescriptorGenerator {
             }
         } else {
             // 任务划分
-            int //TODO
-            ExecutorService executorService = Executors.newCachedThreadPool();
+            int perThreadWorkload = keyPoints.size() / nCore;
+            ArrayList<Integer> boundaries = new ArrayList<>();
+            for (int i = 0; i < nCore; i++) boundaries.add(i * perThreadWorkload);
+            boundaries.add(keyPoints.size());
 
+            ArrayList<ArrayList<FloatMatrix>> descriptorsCache = new ArrayList<>(nCore); // 暂存每个线程输出的结果
+            ArrayList<ArrayList<KeyPointX>> keyPointsCache = new ArrayList<>(nCore);
+            for (int i = 0; i < nCore; i++) {
+                descriptorsCache.add(new ArrayList<>());
+                keyPointsCache.add(new ArrayList<>());
+            }
+
+            ExecutorService executorService = Executors.newCachedThreadPool();
+            for (int i = 0; i < nCore; i++) {
+                final int finalI = i;
+                executorService.execute(() -> {
+                    for (int k = boundaries.get(finalI); k < boundaries.get(finalI + 1); k++) {
+                        KeyPoint keyPoint = keyPoints.get(k);
+                        FloatMatrix descriptor = generate(keyPoint, octaves); // TODO 线程安全性检查
+                        descriptorsCache.get(finalI).add(descriptor);
+                        keyPointsCache.get(finalI).add(new KeyPointX(keyPoint, descriptor));
+                    }
+                });
+            }
             executorService.shutdown();
             long timeout = 3600;
             if (!executorService.awaitTermination(timeout, TimeUnit.SECONDS)) {
                 throw new TimeoutException("Parallel pixel operations failed to finish within " + timeout + " seconds.");
             }
+
+            // TODO 线程输出的合并
         }
 
         System.out.println("DONE");
