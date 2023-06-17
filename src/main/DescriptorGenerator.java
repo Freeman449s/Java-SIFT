@@ -1,6 +1,7 @@
 package main;
 
 import flib.MathX;
+import flib.Timer;
 import org.jblas.FloatMatrix;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
@@ -15,6 +16,7 @@ import static org.opencv.core.CvType.*;
 
 /**
  * 生成特征描述子（论文第6章）
+ * 描述子的计算具有并行化实现，但默认关闭。实验发现并行化实现的效率比串行实现低，这可能是因为多个线程在访问同一个对象时的同步操作具有较大的开销。
  */
 public class DescriptorGenerator {
 
@@ -25,11 +27,12 @@ public class DescriptorGenerator {
     public ArrayList<KeyPointX> keyPointsWithDescriptor;
 
     public ArrayList<FloatMatrix> run(ArrayList<KeyPoint> keyPoints, ArrayList<Octave> octaves) throws InterruptedException, TimeoutException {
-        return run(keyPoints, octaves, false); // TODO 测试通过后改为true
+        return run(keyPoints, octaves, GlobalParam.enableParallelDescriptorComputation);
     }
 
     public ArrayList<FloatMatrix> run(ArrayList<KeyPoint> keyPoints, ArrayList<Octave> octaves, boolean parallel) throws InterruptedException, TimeoutException {
         System.out.print("Generating descriptors...");
+        //Timer timer = new Timer();
         ArrayList<FloatMatrix> descriptors = new ArrayList<>(keyPoints.size());
         keyPointsWithDescriptor = new ArrayList<>(keyPoints.size());
 
@@ -56,13 +59,14 @@ public class DescriptorGenerator {
                 keyPointsCache.add(new ArrayList<>());
             }
 
+            // 并行描述子计算
             ExecutorService executorService = Executors.newCachedThreadPool();
-            for (int i = 0; i < nCore; i++) {
+            for (int i = 0; i < nCore; i++) { // i - 线程号
                 final int finalI = i;
                 executorService.execute(() -> {
-                    for (int k = boundaries.get(finalI); k < boundaries.get(finalI + 1); k++) {
+                    for (int k = boundaries.get(finalI); k < boundaries.get(finalI + 1); k++) { // k - 关键点号
                         KeyPoint keyPoint = keyPoints.get(k);
-                        FloatMatrix descriptor = generate(keyPoint, octaves); // TODO 线程安全性检查
+                        FloatMatrix descriptor = generate(keyPoint, octaves);
                         descriptorsCache.get(finalI).add(descriptor);
                         keyPointsCache.get(finalI).add(new KeyPointX(keyPoint, descriptor));
                     }
@@ -74,10 +78,15 @@ public class DescriptorGenerator {
                 throw new TimeoutException("Parallel pixel operations failed to finish within " + timeout + " seconds.");
             }
 
-            // TODO 线程输出的合并
+            // 列表合并
+            for (int i = 0; i < descriptorsCache.size(); i++) {
+                descriptors.addAll(descriptorsCache.get(i));
+                keyPointsWithDescriptor.addAll(keyPointsCache.get(i));
+            }
         }
 
         System.out.println("DONE");
+        //timer.endAndPrint("Descriptor generation");
         return descriptors;
     }
 
@@ -205,7 +214,7 @@ public class DescriptorGenerator {
     private FloatMatrix postProcess(FloatMatrix descriptor) {
         FloatMatrix normalized = Util.normalize(descriptor);
         for (int i = 0; i < descriptor.length; i++) {
-            float val = descriptor.get(i);
+            float val = normalized.get(i);
             if (val > DESCRIPTOR_MAX_VAL) val = DESCRIPTOR_MAX_VAL;
             normalized.put(i, val);
         }
