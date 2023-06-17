@@ -1,5 +1,6 @@
 package test;
 
+import org.jblas.FloatMatrix;
 import org.opencv.core.*;
 
 import static org.opencv.core.Core.*;
@@ -12,10 +13,16 @@ import main.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.math.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.concurrent.TimeoutException;
 
+@SuppressWarnings("DuplicatedCode")
 public class Test {
 
     static {
@@ -28,7 +35,7 @@ public class Test {
         //System.out.printf("Min value = %.3f, max value = %.3f\n", Util.min(gray), Util.max(gray));
         normalize(gray, gray, 0, 1, NORM_MINMAX, CV_32F);
         try {
-            siftTest(imagePath);
+            parallelDescriptorComputationTest(imagePath);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -126,5 +133,31 @@ public class Test {
         normalize(markedImage, markedImage, 0, 255, NORM_MINMAX, CV_8UC1);
         imshow("Marked Image", markedImage);
         waitKey();
+    }
+
+    private static void parallelDescriptorComputationTest(String path) throws IOException {
+        Mat image = Imgcodecs.imread(path);
+        Mat gray = new Mat();
+        Imgproc.cvtColor(image, gray, Imgproc.COLOR_BGR2GRAY);
+        Mat grayFloat = new Mat();
+        normalize(gray, grayFloat, 0, 1, NORM_MINMAX, CV_32F);
+
+        SIFT sift = new SIFT(grayFloat);
+        ArrayList<KeyPointX> keyPointsWithDescriptor = sift.run();
+        Collections.sort(keyPointsWithDescriptor);
+        ArrayList<FloatMatrix> descriptors = sift.getDescriptors();
+        String outputFilePath = "parallel 3.txt";
+        File outputFile = new File(outputFilePath);
+        if (outputFile.exists()) {
+            throw new IOException("Output file \"" + outputFilePath + "\" already exists.");
+        }
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFilePath))) {
+            for (KeyPointX keyPoint : keyPointsWithDescriptor) {
+                writer.write(keyPoint.toString());
+                writer.newLine();
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 }
