@@ -7,28 +7,13 @@ import org.opencv.core.Point;
 
 import java.io.Serializable;
 
-public class KeyPointX implements Comparable<KeyPointX>, Serializable {
-    public final transient KeyPoint keyPoint;
+public class KeyPointX implements Comparable<KeyPointX> {
+    public final KeyPoint keyPoint;
     public final FloatMatrix descriptor;
 
-    // ============================== 为实现序列化而存储的KeyPoint的数据 ==============================
-    private double x, y; // FIXME 更新keyPoint时，需要同步更新这些字段
-    private float size;
-    private float angle;
-    private float response;
-    private int octave;
-    private int class_id;
-
     public KeyPointX(KeyPoint keyPoint, FloatMatrix descriptor) {
-        this.keyPoint = keyPoint;
-        this.descriptor = descriptor;
-
-        x = this.keyPoint.pt.x;
-        y = this.keyPoint.pt.y;
-        size=this.keyPoint.size;
-        angle=this.keyPoint.angle;
-        response=this.keyPoint.response;
-        octave=this.keyPoint
+        this.keyPoint = Util.keyPointDeepCopy(keyPoint);
+        this.descriptor = descriptor.dup();
     }
 
     @Override
