@@ -30,7 +30,7 @@ public class Test {
     }
 
     public static void main(String[] args) {
-        String imagePath = "image/room.jpg";
+        String imagePath = "image/box.png";
         Mat gray = imread(imagePath, IMREAD_GRAYSCALE);
         //System.out.printf("Min value = %.3f, max value = %.3f\n", Util.min(gray), Util.max(gray));
         normalize(gray, gray, 0, 1, NORM_MINMAX, CV_32F);
@@ -129,7 +129,7 @@ public class Test {
         SIFT sift = new SIFT(grayFloat);
         ArrayList<KeyPointX> keyPointsWithDescriptor = sift.run();
         ArrayList<KeyPoint> keyPoints = sift.getKeyPoints();
-        Mat markedImage = Visualization.visualize(image, keyPoints, true, true);
+        Mat markedImage = Visualization.visualize(image, keyPoints, false, false);
         normalize(markedImage, markedImage, 0, 255, NORM_MINMAX, CV_8UC1);
         imshow("Marked Image", markedImage);
         waitKey();
