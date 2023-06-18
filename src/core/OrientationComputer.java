@@ -1,4 +1,4 @@
-package main;
+package core;
 
 import flib.MathX;
 import org.jblas.FloatMatrix;

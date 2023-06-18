@@ -9,7 +9,8 @@ import static org.opencv.highgui.HighGui.imshow;
 import static org.opencv.highgui.HighGui.waitKey;
 import static org.opencv.imgcodecs.Imgcodecs.*;
 
-import main.*;
+import core.*;
+import io.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
@@ -35,7 +36,7 @@ public class Test {
         //System.out.printf("Min value = %.3f, max value = %.3f\n", Util.min(gray), Util.max(gray));
         normalize(gray, gray, 0, 1, NORM_MINMAX, CV_32F);
         try {
-            siftTest(imagePath);
+            ioTest(imagePath);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -159,5 +160,21 @@ public class Test {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+    }
+
+    private static void ioTest(String imagePath) throws IOException, ClassNotFoundException {
+        Mat image = Imgcodecs.imread(imagePath);
+        Mat gray = new Mat();
+        Imgproc.cvtColor(image, gray, Imgproc.COLOR_BGR2GRAY);
+        Mat grayFloat = new Mat();
+        normalize(gray, grayFloat, 0, 1, NORM_MINMAX, CV_32F);
+
+        SIFT sift = new SIFT(grayFloat);
+        ArrayList<KeyPointX> keyPointsWithDescriptor = sift.run();
+
+        String filePath = "KeyPointList.dat";
+        IOUtil.writeKeyPointXes(keyPointsWithDescriptor, filePath, false);
+        ArrayList<KeyPointX> recoveredList = IOUtil.readKeyPointXes(filePath);
+        System.out.println();
     }
 }

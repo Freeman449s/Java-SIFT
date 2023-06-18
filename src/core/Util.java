@@ -1,4 +1,4 @@
-package main;
+package core;
 
 import flib.MathX;
 import org.jblas.FloatMatrix;
@@ -7,8 +7,6 @@ import org.opencv.core.Mat;
 import org.opencv.core.Size;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -272,5 +270,6 @@ public class Util {
         pos[1] = (float) (keyPoint.pt.y * Math.pow(2, keyPoint.octave) / Math.pow(2, targetOctave));
         return pos;
     }
+
 }
 

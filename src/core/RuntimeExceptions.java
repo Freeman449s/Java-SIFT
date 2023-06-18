@@ -1,4 +1,4 @@
-package main;
+package core;
 
 class TooManyArgumentsException extends RuntimeException {
     public TooManyArgumentsException() {

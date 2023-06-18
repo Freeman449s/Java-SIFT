@@ -1,6 +1,5 @@
-package main;
+package core;
 
-import flib.MathX;
 import org.jblas.FloatMatrix;
 import org.opencv.core.KeyPoint;
 
@@ -9,13 +8,13 @@ public class KeyPointX implements Comparable<KeyPointX> {
     public final FloatMatrix descriptor;
 
     public KeyPointX(KeyPoint keyPoint, FloatMatrix descriptor) {
-        this.keyPoint = keyPoint;
-        this.descriptor = descriptor;
+        this.keyPoint = Util.keyPointDeepCopy(keyPoint);
+        this.descriptor = descriptor.dup();
     }
 
     @Override
     public String toString() {
-        return "{"+keyPoint.toString()+"; Descriptor "+descriptor.toString()+"}";
+        return "{" + keyPoint.toString() + "; Descriptor " + descriptor.toString() + "}";
     }
 
     /**

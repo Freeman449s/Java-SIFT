@@ -1,6 +1,5 @@
-package main;
+package core;
 
-import flib.MathX;
 import org.jblas.*;
 import org.opencv.core.*;
 
