@@ -1,4 +1,4 @@
-package main;
+package core;
 
 import org.jblas.FloatMatrix;
 import org.opencv.core.KeyPoint;

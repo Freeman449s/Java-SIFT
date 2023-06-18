@@ -1,4 +1,4 @@
-package main;
+package core;
 
 /**
  * 全局参数

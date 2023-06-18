@@ -1,7 +1,6 @@
-package main;
+package core;
 
 import flib.MathX;
-import flib.Timer;
 import org.jblas.FloatMatrix;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;

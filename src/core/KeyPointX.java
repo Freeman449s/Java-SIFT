@@ -1,11 +1,7 @@
-package main;
+package core;
 
-import flib.MathX;
 import org.jblas.FloatMatrix;
 import org.opencv.core.KeyPoint;
-import org.opencv.core.Point;
-
-import java.io.Serializable;
 
 public class KeyPointX implements Comparable<KeyPointX> {
     public final KeyPoint keyPoint;
