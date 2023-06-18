@@ -129,7 +129,7 @@ public class Test {
         SIFT sift = new SIFT(grayFloat);
         ArrayList<KeyPointX> keyPointsWithDescriptor = sift.run();
         ArrayList<KeyPoint> keyPoints = sift.getKeyPoints();
-        Mat markedImage = Visualization.visualize(image, keyPoints, true, true, 1);
+        Mat markedImage = Visualization.visualize(image, keyPoints, true, true);
         normalize(markedImage, markedImage, 0, 255, NORM_MINMAX, CV_8UC1);
         imshow("Marked Image", markedImage);
         waitKey();
