@@ -1,10 +1,10 @@
 package test;
 
-import align.AlignUtil;
-import align.Match;
+import align.*;
 import org.jblas.FloatMatrix;
 import org.opencv.core.*;
 
+import static align.AlignUtil.USE_CV_HOMOGRAPHY;
 import static org.opencv.calib3d.Calib3d.RANSAC;
 import static org.opencv.calib3d.Calib3d.findHomography;
 import static org.opencv.core.Core.*;
@@ -182,7 +182,7 @@ public class Test {
         System.out.println();
     }
 
-    private static void alignTest() {
+    private static void alignTest() throws IOException, ClassNotFoundException {
         String filePath1 = "data/book3.dat", filePath2 = "data/book4.dat";
         String imagePath1 = "image/book3.jpg", imagePath2 = "image/book4.jpg";
         Mat image1 = Imgcodecs.imread(imagePath1), image2 = Imgcodecs.imread(imagePath2);
@@ -197,21 +197,38 @@ public class Test {
 
             Mat H;
             Point delta = new Point(image1.width(), image1.height() / 2);
-            Point[] srcPointArray = new Point[matches.size()], dstPointArray = new Point[matches.size()];
-            // 数据格式转换
-            for (int i = 0; i < matches.size(); i++) {
-                Match match = matches.get(i);
-                float[] tmp = Util.relocate(pt1.get(match.queryIdx).keyPoint, 1);
-                Point srcPt = new Point(tmp[0], tmp[1]);
-                tmp = Util.relocate(pt2.get(match.trainIdx1).keyPoint, 1);
-                Point dstPt = new Point(tmp[0], tmp[1]);
-                dstPt = Util.translate(dstPt, delta);
-                srcPointArray[i] = srcPt;
-                dstPointArray[i] = dstPt;
-            }
-            MatOfPoint2f srcPoints = new MatOfPoint2f(srcPointArray), dstPoints = new MatOfPoint2f(dstPointArray);
+            if (!USE_CV_HOMOGRAPHY) {
+                // 数据格式转换
+                ArrayList<Point> srcPoints = new ArrayList<>(matches.size()), dstPoints = new ArrayList<>(matches.size());
+                for (Match match : matches) {
+                    float[] tmp = Util.relocate(pt1.get(match.queryIdx).keyPoint, 1);
+                    Point srcPt = new Point(tmp[0], tmp[1]);
+                    tmp = Util.relocate(pt2.get(match.trainIdx1).keyPoint, 1);
+                    Point dstPt = new Point(tmp[0], tmp[1]);
+                    dstPt = Util.translate(dstPt, delta);
+                    srcPoints.add(srcPt);
+                    dstPoints.add(dstPt);
+                }
 
-            H = findHomography(srcPoints, dstPoints, RANSAC);
+                H = HomographyEstimator.runVanillaEstimation(srcPoints, dstPoints);
+            } else {
+                // 数据格式转换
+                Point[] srcPointArray = new Point[matches.size()], dstPointArray = new Point[matches.size()];
+                for (int i = 0; i < matches.size(); i++) {
+                    Match match = matches.get(i);
+                    float[] tmp = Util.relocate(pt1.get(match.queryIdx).keyPoint, 1);
+                    Point srcPt = new Point(tmp[0], tmp[1]);
+                    tmp = Util.relocate(pt2.get(match.trainIdx1).keyPoint, 1);
+                    Point dstPt = new Point(tmp[0], tmp[1]);
+                    dstPt = Util.translate(dstPt, delta);
+                    srcPointArray[i] = srcPt;
+                    dstPointArray[i] = dstPt;
+                }
+                MatOfPoint2f srcPoints = new MatOfPoint2f(srcPointArray), dstPoints = new MatOfPoint2f(dstPointArray);
+
+                H = findHomography(srcPoints, dstPoints, RANSAC);
+            }
+
             AlignUtil.printH(H);
 
             Mat result = new Mat();

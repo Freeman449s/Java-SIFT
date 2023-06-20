@@ -9,7 +9,7 @@ import java.util.Collections;
 public class AlignUtil {
     private static final int GOOD_LOWER_BOUND = 10; // 有效配对的下界；寻找到的有效配对低于此值时，可能无法有效地拼接
     private static final int GOOD_UPPER_BOUND = 20; // 有效配对的上界；寻找到的有效配对高于此值时，可能无法有效地拼接（简单的单应矩阵求解对外点不鲁棒）
-    private static final boolean USE_CV_HOMOGRAPHY = true;
+    public static final boolean USE_CV_HOMOGRAPHY = true;
 
     /**
      * 为queryPoints中的每个关键点，在trainPoints中找到描述子的欧式距离最接近的2个关键点
