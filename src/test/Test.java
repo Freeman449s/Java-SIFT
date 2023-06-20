@@ -183,8 +183,8 @@ public class Test {
     }
 
     private static void alignTest() {
-        String filePath1 = "data/book1.dat", filePath2 = "data/book2.dat";
-        String imagePath1 = "image/book1.jpg", imagePath2 = "image/book2.jpg";
+        String filePath1 = "data/book3.dat", filePath2 = "data/book4.dat";
+        String imagePath1 = "image/book3.jpg", imagePath2 = "image/book4.jpg";
         Mat image1 = Imgcodecs.imread(imagePath1), image2 = Imgcodecs.imread(imagePath2);
         try {
             ArrayList<KeyPointX> pt1 = IOUtil.readKeyPointXes(filePath1), pt2 = IOUtil.readKeyPointXes(filePath2);
@@ -196,7 +196,7 @@ public class Test {
             }
 
             Mat H;
-            Point delta = new Point(image1.width(), 0);
+            Point delta = new Point(image1.width(), image1.height() / 2);
             Point[] srcPointArray = new Point[matches.size()], dstPointArray = new Point[matches.size()];
             // 数据格式转换
             for (int i = 0; i < matches.size(); i++) {
@@ -215,9 +215,9 @@ public class Test {
             AlignUtil.printH(H);
 
             Mat result = new Mat();
-            Imgproc.warpPerspective(image1, result, H, new Size(2 * image1.width(), image1.height()));
-            Mat half = new Mat(result, new Rect(image1.width(), 0, image1.width(), image1.height()));
-            image2.copyTo(half); // image2叠加到结果图像的右侧
+            Imgproc.warpPerspective(image1, result, H, new Size(2 * image1.width(), 2 * image1.height()));
+            Mat superposeArea = new Mat(result, new Rect(image1.width(), image1.height() / 2, image2.width(), image2.height()));
+            image2.copyTo(superposeArea); // image2叠加到结果图像的右侧
             imwrite("image/result.jpg", result);
             imshow("Stitching Result", result);
             waitKey();
