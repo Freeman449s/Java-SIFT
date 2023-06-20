@@ -48,6 +48,8 @@ public class Main {
             for (KeyPointX keyPointX : keyPointsWithDescriptor)
                 keyPoints.add(keyPointX.keyPoint);
             Mat imageWithMark = Visualization.visualize(image, keyPoints, true, true);
+            /*imshow("Image with Mark", imageWithMark);
+            waitKey();*/
             imwrite(siftPath, imageWithMark);
             try {
                 IOUtil.writeKeyPointXes(keyPointsWithDescriptor, datPath, false);
