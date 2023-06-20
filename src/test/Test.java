@@ -1,8 +1,12 @@
 package test;
 
+import align.AlignUtil;
+import align.Match;
 import org.jblas.FloatMatrix;
 import org.opencv.core.*;
 
+import static org.opencv.calib3d.Calib3d.RANSAC;
+import static org.opencv.calib3d.Calib3d.findHomography;
 import static org.opencv.core.Core.*;
 import static org.opencv.core.CvType.*;
 import static org.opencv.highgui.HighGui.imshow;
@@ -36,7 +40,7 @@ public class Test {
         //System.out.printf("Min value = %.3f, max value = %.3f\n", Util.min(gray), Util.max(gray));
         normalize(gray, gray, 0, 1, NORM_MINMAX, CV_32F);
         try {
-            ioTest(imagePath);
+            alignTest();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -176,5 +180,49 @@ public class Test {
         IOUtil.writeKeyPointXes(keyPointsWithDescriptor, filePath, false);
         ArrayList<KeyPointX> recoveredList = IOUtil.readKeyPointXes(filePath);
         System.out.println();
+    }
+
+    private static void alignTest() {
+        String filePath1 = "data/book1.dat", filePath2 = "data/book2.dat";
+        String imagePath1 = "image/book1.jpg", imagePath2 = "image/book2.jpg";
+        Mat image1 = Imgcodecs.imread(imagePath1), image2 = Imgcodecs.imread(imagePath2);
+        try {
+            ArrayList<KeyPointX> pt1 = IOUtil.readKeyPointXes(filePath1), pt2 = IOUtil.readKeyPointXes(filePath2);
+            ArrayList<Match> coarseMatches = AlignUtil.findMatches(pt1, pt2);
+            ArrayList<Match> matches = AlignUtil.filterMatches(coarseMatches);
+            if (matches == null) {
+                System.out.println("Unable to find enough matches.");
+                return;
+            }
+
+            Mat H;
+            Point delta = new Point(image1.width(), 0);
+            Point[] srcPointArray = new Point[matches.size()], dstPointArray = new Point[matches.size()];
+            // 数据格式转换
+            for (int i = 0; i < matches.size(); i++) {
+                Match match = matches.get(i);
+                float[] tmp = Util.relocate(pt1.get(match.queryIdx).keyPoint, 1);
+                Point srcPt = new Point(tmp[0], tmp[1]);
+                tmp = Util.relocate(pt2.get(match.trainIdx1).keyPoint, 1);
+                Point dstPt = new Point(tmp[0], tmp[1]);
+                dstPt = Util.translate(dstPt, delta);
+                srcPointArray[i] = srcPt;
+                dstPointArray[i] = dstPt;
+            }
+            MatOfPoint2f srcPoints = new MatOfPoint2f(srcPointArray), dstPoints = new MatOfPoint2f(dstPointArray);
+
+            H = findHomography(srcPoints, dstPoints, RANSAC);
+            AlignUtil.printH(H);
+
+            Mat result = new Mat();
+            Imgproc.warpPerspective(image1, result, H, new Size(2 * image1.width(), image1.height()));
+            Mat half = new Mat(result, new Rect(image1.width(), 0, image1.width(), image1.height()));
+            image2.copyTo(half); // image2叠加到结果图像的右侧
+            imwrite("image/result.jpg", result);
+            imshow("Stitching Result", result);
+            waitKey();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 }

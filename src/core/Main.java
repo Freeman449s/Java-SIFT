@@ -7,9 +7,9 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+import static org.opencv.calib3d.Calib3d.findHomography;
 import static org.opencv.core.Core.*;
 import static org.opencv.core.CvType.*;
-import static org.opencv.highgui.HighGui.imshow;
 import static org.opencv.highgui.HighGui.waitKey;
 import static org.opencv.imgcodecs.Imgcodecs.*; // 导入静态方法
 import static org.opencv.imgproc.Imgproc.*;
@@ -24,6 +24,13 @@ public class Main {
     private static final String STORAGE_FILE_PATH = "data/box_in_scene.dat";
 
     public static void main(String[] args) {
+        batchComputation();
+    }
+
+    /**
+     * 批量关键点检测和描述子计算
+     */
+    private static void batchComputation() {
         Scanner in = new Scanner(System.in);
         while (true) {
             System.out.print("图像路径：");
