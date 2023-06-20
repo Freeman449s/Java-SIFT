@@ -4,6 +4,7 @@ import flib.MathX;
 import org.jblas.FloatMatrix;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
+import org.opencv.core.Point;
 import org.opencv.core.Size;
 
 import java.util.ArrayList;
@@ -270,6 +271,5 @@ public class Util {
         pos[1] = (float) (keyPoint.pt.y * Math.pow(2, keyPoint.octave) / Math.pow(2, targetOctave));
         return pos;
     }
-
 }
 

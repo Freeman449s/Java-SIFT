@@ -6,6 +6,7 @@ lib
 
 # 输出
 out
+data
 
 # 日志
 log
