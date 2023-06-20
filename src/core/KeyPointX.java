@@ -18,6 +18,59 @@ public class KeyPointX implements Comparable<KeyPointX> {
     }
 
     /**
+     * 返回两个关键点的几何距离（使用keyPoint成员的位置计算的距离）
+     *
+     * @param pt1 关键点1
+     * @param pt2 关键点2
+     * @return 关键点pt1和pt2的几何距离
+     */
+    public static double geoDist(KeyPointX pt1, KeyPointX pt2) {
+        double deltaX = pt1.keyPoint.pt.x - pt2.keyPoint.pt.x;
+        double deltaY = pt1.keyPoint.pt.y - pt2.keyPoint.pt.y;
+        return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    }
+
+    /**
+     * 返回该点与other的几何距离（使用keyPoint成员的位置计算的距离）
+     *
+     * @param other 另一个关键点
+     * @return 该关键点和other的几何距离
+     */
+    public double geoDist(KeyPointX other) {
+        return geoDist(this, other);
+    }
+
+    /**
+     * 计算两个关键点描述子的欧氏距离
+     *
+     * @param pt1 关键点1
+     * @param pt2 关键点2
+     * @return 关键点pt1和pt2的描述子的欧式距离
+     */
+    public static double featureEuclidDist(KeyPointX pt1, KeyPointX pt2) {
+        FloatMatrix delta = pt1.descriptor.sub(pt2.descriptor);
+        return delta.norm2();
+    }
+
+    /**
+     * 计算该点与other的描述子的欧氏距离
+     *
+     * @param other 另一个关键点
+     * @return 该关键点和other的描述子的欧氏距离
+     */
+    public double featureEuclidDist(KeyPointX other) {
+        return featureEuclidDist(this, other);
+    }
+
+    public static KeyPointX deepCopy(KeyPointX keyPointX) {
+        return new KeyPointX(keyPointX.keyPoint, keyPointX.descriptor);
+    }
+
+    public KeyPointX deepCopy() {
+        return deepCopy(this);
+    }
+
+    /**
      * This method is not well-defined, hence it's only for test purpose.
      *
      * @param o the object to be compared.

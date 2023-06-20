@@ -271,5 +271,15 @@ public class Util {
         pos[1] = (float) (keyPoint.pt.y * Math.pow(2, keyPoint.octave) / Math.pow(2, targetOctave));
         return pos;
     }
+
+    /**
+     * 将一个点平移一段距离
+     *
+     * @param point 需要平移的点
+     * @param delta 平移向量
+     */
+    public static Point translate(Point point, Point delta) {
+        return new Point(point.x + delta.x, point.y + delta.y);
+    }
 }
 
