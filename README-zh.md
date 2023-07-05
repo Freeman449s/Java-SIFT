@@ -1,6 +1,6 @@
 # Java SIFT
 
-[English Version](README-en.md) 
+[English Version](README.md) 
 
 ## 介绍
 

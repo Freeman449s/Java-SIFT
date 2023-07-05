@@ -1,6 +1,6 @@
 # Java SIFT
 
-[中文版](README.md)
+[中文版](README-zh.md)
 
 ## Introduction
 
