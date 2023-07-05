@@ -1,3 +1,7 @@
+# Java SIFT
+
+[中文版](README.md)
+
 ## Introduction
 
 A Java implementation of the SIFT algorithm ([Lowe 2004] Distinctive Image Features from Scale-Invariant Keypoints).
