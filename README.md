@@ -1,42 +1,42 @@
 # Java SIFT
 
-[English Version](README-en.md) 
+[中文版](README.md)
 
-## 介绍
+## Introduction
 
-Java实现的SIFT算法（[Lowe 2004] Distinctive Image Features from Scale-Invariant Keypoints）。
+A Java implementation of the SIFT algorithm ([Lowe 2004] Distinctive Image Features from Scale-Invariant Keypoints).
 
-## 配置环境
+## Environment Setup
 
-### 运行环境
+### Operation Environment
 
-经测试，本仓库可以在下述环境运行：
+This repo has been tested in the following environment:
 
 - Windows 10 22H2
 - IntelliJ IDEA 2023.1.2
 - JDK 14.0.2
 
-### 依赖项
+### Dependencies
 
 - jblas 1.2.4 [mikiobraun/jblas @ GitHub](https://jblas.org/)
 - OpenCV 4.7.0 [OpenCV - Open Computer Vision Library](https://opencv.org/)
 
-## 使用方法
+## How to Use
 
-1. 下载依赖项，并包含到项目中。你可能还需要将OpenCV/build/java下的动态链接库添加到Java库路径。
+1. Download the dependencies and include them into your project. You may also need to add the dynamic link libraries under "OpenCV/build/java" to the Java library path.
 
-2. 将本仓库中的代码包含到你的项目中。
+2. Include the code in this repo into your project.
 
-3. 如要检测关键点和计算描述子，需要先将图像转为[0,1]范围内的灰度图，然后运行以下代码：
+3. To detect key points and compute descriptors, you need to first convert the image to a grayscale image in the range of [0,1], and then run the following code:
 
    ```java
    SIFT sift = new SIFT(grayFloat);
    ArrayList<KeyPointX> keyPointsWithDescriptor = sift.run();
    ```
 
-   返回的`KeyPointX`对象具有CV`KeyPoint`类型的关键点，以及jblas`FloatMatrix`类型的描述子。
+   The returned `KeyPointX` objects include key points' information of CV's `KeyPoint` type and a descriptor of jblas' `FloatMatrix` type.
 
-4. 要将关键点可视化，需要从`KeyPointX`中取出`KeyPoint`对象，组织成`ArrayList`，然后调用`Visualization.visualize()`：
+4. To visualize key points, you need to extract the `KeyPoint` objects from `KeyPointX`es, organize them into an `ArrayList`, and then call `Visualization.visualize()`:
 
    ```java
    ArrayList<KeyPoint> keyPoints = new ArrayList<>(keyPointsWithDescriptor.size());
@@ -47,7 +47,7 @@ Java实现的SIFT算法（[Lowe 2004] Distinctive Image Features from Scale-Inva
    waitKey();
    ```
 
-5. 要向文件写入关键点和描述子，可以调用`IOUtil`的`writeKeyPointXes()`和`readKeyPointXes()`方法：
+5. To write key points and descriptors to the file, call the `writeKeyPointXes()` and `readKeyPointXes() ` methods of `IOUtil`:
 
    ```java
    String filePath = "KeyPointList.dat";
@@ -55,34 +55,35 @@ Java实现的SIFT算法（[Lowe 2004] Distinctive Image Features from Scale-Inva
    ArrayList<KeyPointX> recoveredList = IOUtil.readKeyPointXes(filePath);
    ```
 
-### 测试样例
+### Examples
 
-example文件夹下有“book1.jpg”和“book2.jpg”两张测试图片：
+There are two test images "book1.jpg" and "book2.jpg" under the "example" folder:
 
 ![book1](example/book1.jpg) ![book2](example/book2.jpg)
 
-在测试图片上检测关键点并可视化，可以得到如下结果：
+By detecting and visualizing the key points on the test image, you can get the following results:
 
 ![book1 sift](example/book1 sift.jpg) ![book2 sift](example/book2 sift.jpg)
 
-检测到的关键点和描述子可以用于下游操作。如使用OpenCV计算单应矩阵，并进行图像拼接，可以得到类似下图的结果：
+The detected key points and descriptors can be used for downstream operations. 
+For example, by using OpenCV to calculate the homography matrix and doing image stitching, you can get a result similar to the following image:
 
 ![stitch](example/stitch.jpg)
 
-## 目前已知的问题
+## Known Issues
 
-- 在“精确关键点定位”一步中，被剔除的关键点较多，致使剩余的关键点较少。可能是在将图像归一化到[0,1]范围时操作不当导致的。
-- 该实现的鲁棒性不是很高，当图像发生角度较大的透视变换时，一些关键点可能无法被检测到，并且在一些关键点上发现了方向反转的问题。
+- Many key points are removed in the step of "accurate key point localization", resulting in fewer remaining key points. It may be caused by improper operation when normalizing the image to the range of [0,1].
+- The robustness of this implementation is not very high. Under circumstances of large-scale perspective transformations, some key points may not be detected, and the problem of direction reversal has been observed on some of the key points.
 
-## 备注
+## Other Notes
 
-### 关于`KeyPoint`各个字段的意义
+### On the meaning of each field of `KeyPoint`:
 
-本实现中，`KeyPoint`各个字段的意义和OpenCV惯例略有不同，现列出本实现中各个字段的意义：
+In this implementation, the meaning of each field in `KeyPoint` is slightly different from the OpenCV convention. The meaning of each field in this implementation is listed:
 
-- `pt` - 关键点在图像中的局部坐标，没有与输入图像或“base image”对齐。例如，假设输入图像的尺寸为`w*h`，则下一octave中的关键点的坐标在`[0,w/2]`以及`[0,h/2]`范围内。
-- `size` - 关键点在整个尺度空间中的全局尺度。
-- `angle` - 关键点的梯度方向；以角度制表示，取值范围(0,360°)。一个关键点可能对应了多个方向，与关键点周围像素的梯度方向有关。
-- `response` - 关键点的DoG响应。
-- `octave` - 关键点所属octave的序号，从0开始。
-- `class_id` - 未使用的字段，为默认值-1。
+- `pt` - The local coordinate of the key point in the image, not aligned with the input image or "base image". For example, let the size of the input image be `w*h`, then the local coordinate of a key point in the next octave is within the range of `[0,w/2]` and `[0,h/2]`。
+- `size` - The global scale of the key point in the whole scale-space.
+- `angle` - The gradient direction of the key point; expressed in angle system, the value is within range (0,360°). A key point may correspond to multiple directions, depending on the gradient directions of the pixels around the point.
+- `response` - DoG response of the key points.
+- `octave` - The sequence number of the octave to which the key point belongs, starting from 0.
+- `class_id` - Unused field, the default value is -1.
